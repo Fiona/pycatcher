@@ -1,0 +1,15 @@
+--------------
+-- PyCatcher --
+By Fiona Burrows
+--------------
+
+Little program for generating images used in timelapse videos. (Videos made up of frames taken over long periods of time distilling a lot of footage down to a short timeframe.)
+PyCatcher starts with a grab of your screen and runs it through predefined filters, before saving the resulting image out and waiting for the next time it should run.
+It supports taking webcam images and having them showing in a small box inline.
+
+Dependencies:
+-PIL
+-PyGTK
+
+Webcam support dependencies:
+-OpenCV + Python bindings
