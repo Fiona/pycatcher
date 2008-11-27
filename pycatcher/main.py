@@ -3,7 +3,8 @@ PyCatcher
 By Fiona Burrows <fiona@myrmidonprocess.com>
 """
 
-import os, sys, time, gtk, Image
+import os, sys, time, gtk, Image, curses
+import curses.ascii
 from optparse import OptionParser
 
 config = {
@@ -17,12 +18,28 @@ config = {
 
 img_counter = 1
 
+currently_paused = False
 
+stdscr = curses.initscr()
+
+def _print(str):
+	""" Helper func for curses """
+	stdscr.addstr(str)
+	stdscr.refresh()
+	
+
+def _die(msg):
+	""" Helper func for curses """
+	curses.nocbreak(); stdscr.keypad(0); curses.echo()
+	curses.endwin()
+	sys.exit(msg)
+
+	
 def take_image():
 	""" The magic method - Captures an image and saves it out. """
-	
+
 	# take screenshot
-	print "Trying to take screengrab ..."
+	_print("Trying to take screengrab ...")
 	
 	try:
 
@@ -46,9 +63,9 @@ def take_image():
 		)
 
 	except:
-		 sys.exit("Failed taking screenshot")
+		 _die("Failed taking screenshot")
 
-	print "Converting to PIL image ..."
+	_print("Converting to PIL image ...")
 
 	final_screengrab = Image.frombuffer(
 		"RGB",
@@ -60,7 +77,7 @@ def take_image():
 		1
 	)
 
-	print "Saving image ..."
+	_print("Saving image ...")
 
 	global img_counter
 	
@@ -77,14 +94,25 @@ def take_image():
 	# Save it out
 	final_screengrab.save(config['filename_path'] + try_file, "PNG")
 
-	print "Saved as %s" % try_file
+	_print("Saved as %s \n" % try_file)
+
+
+def thread_through():
+	""" Used for threading the screenshot taking mechanism so we can get input
+	And still be lazy with time.sleep() """
+	global currently_paused
+	
+	while True:
+		if currently_paused == False:
+			take_image()
+			time.sleep(config['delay'])
 
 
 def load_configuration(filename):
 	""" Overrides the configuration values within the defined file """
 	config_mod = __import__(filename)
 	config.update(config_mod.config)
-	
+
 
 def main():
 	""" Main entry point """
@@ -92,7 +120,7 @@ def main():
 
 	parser.add_option("-c", "--config", dest="config_filename",
 					  default="defaults",
-                      help="Specify name of configuration file. [Default: %default]")
+					  help="Specify name of configuration file. [Default: %default]")
 
 	(options, args) = parser.parse_args()
 
@@ -104,9 +132,39 @@ def main():
 	if os.path.exists(config['filename_path']) == False:
 		sys.exit("Path defined in configuration does not exist.")
 
-	while True:
-		take_image()
-		time.sleep(config['delay'])
+	#curses.noecho()
+	#curses.cbreak()
+	stdscr.keypad(1)
+
+	_print("---------------------------\n")
+	_print("PyCatcher -----------------\n")
+	_print("---------------------------\n")
+	_print("By Fiona Burrows ----------\n")
+	_print("---------------------------\n")
+	_print("<fiona@myrmidonprocess.com-\n\n")
+
+	_print("* Esc to quit, space to pause capturing.\n\n")	
+	_print("* Using configuration file at %s.py \n" % options.config_filename)
+	_print("* Starting capture thread... \n\n")
+	
+	import thread
+	thread.start_new_thread(thread_through, ())
+
+	global currently_paused
+	
+	while 1:
+		c = stdscr.getch()
+		if c == curses.ascii.ESC:
+			break
+		elif c == curses.ascii.SP:
+			if currently_paused:
+				currently_paused = False
+				_print("* Unpaused\n\n")
+			else:
+				currently_paused = True
+				_print("* Paused\n\n")
+
+	_die("Quit!")
 	
 
 if __name__ == "__main__":
