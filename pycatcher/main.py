@@ -3,8 +3,7 @@ PyCatcher
 By Fiona Burrows <fiona@myrmidonprocess.com>
 """
 
-import os, sys, time, gtk, Image, curses
-import curses.ascii
+import os, sys, time, gtk, Image
 from optparse import OptionParser
 
 config = {
@@ -19,27 +18,13 @@ config = {
 img_counter = 1
 
 currently_paused = False
-
-stdscr = curses.initscr()
-
-def _print(str):
-	""" Helper func for curses """
-	stdscr.addstr(str)
-	stdscr.refresh()
 	
-
-def _die(msg):
-	""" Helper func for curses """
-	curses.nocbreak(); stdscr.keypad(0); curses.echo()
-	curses.endwin()
-	sys.exit(msg)
-
 	
 def take_image():
 	""" The magic method - Captures an image and saves it out. """
 
 	# take screenshot
-	_print("Trying to take screengrab ...")
+	print "Trying to take screengrab ..."
 	
 	try:
 
@@ -63,9 +48,9 @@ def take_image():
 		)
 
 	except:
-		 _die("Failed taking screenshot")
+		 die("Failed taking screenshot")
 
-	_print("Converting to PIL image ...")
+	print "Converting to PIL image ..."
 
 	final_screengrab = Image.frombuffer(
 		"RGB",
@@ -77,7 +62,8 @@ def take_image():
 		1
 	)
 
-	_print("Saving image ...")
+
+	print "Saving image ..."
 
 	global img_counter
 	
@@ -94,7 +80,7 @@ def take_image():
 	# Save it out
 	final_screengrab.save(config['filename_path'] + try_file, "PNG")
 
-	_print("Saved as %s \n" % try_file)
+	print "Saved as %s \n" % try_file
 
 
 def thread_through():
@@ -112,6 +98,10 @@ def load_configuration(filename):
 	""" Overrides the configuration values within the defined file """
 	config_mod = __import__(filename)
 	config.update(config_mod.config)
+
+
+def parse_command(command):
+	pass
 
 
 def main():
@@ -132,39 +122,39 @@ def main():
 	if os.path.exists(config['filename_path']) == False:
 		sys.exit("Path defined in configuration does not exist.")
 
-	#curses.noecho()
-	#curses.cbreak()
-	stdscr.keypad(1)
+	print "---------------------------"
+	print "PyCatcher -----------------"
+	print "---------------------------"
+	print "By Fiona Burrows ----------"
+	print "---------------------------"
+	print "<fiona@myrmidonprocess.com-\n"
 
-	_print("---------------------------\n")
-	_print("PyCatcher -----------------\n")
-	_print("---------------------------\n")
-	_print("By Fiona Burrows ----------\n")
-	_print("---------------------------\n")
-	_print("<fiona@myrmidonprocess.com-\n\n")
-
-	_print("* Esc to quit, space to pause capturing.\n\n")	
-	_print("* Using configuration file at %s.py \n" % options.config_filename)
-	_print("* Starting capture thread... \n\n")
+	print "* Hit enter to pause capturing and/or enter a command.\n"
+	print "* Using configuration file at %s.py" % options.config_filename
+	print "* Starting capture thread... \n"
 	
 	import thread
 	thread.start_new_thread(thread_through, ())
 
 	global currently_paused
 	
-	while 1:
-		c = stdscr.getch()
-		if c == curses.ascii.ESC:
-			break
-		elif c == curses.ascii.SP:
-			if currently_paused:
-				currently_paused = False
-				_print("* Unpaused\n\n")
-			else:
-				currently_paused = True
-				_print("* Paused\n\n")
+	while True:
+		get_input = raw_input("")
+		currently_paused = True
+		
+		get_command = raw_input("* Paused...\n* Plase enter commend. (exit to close PyCatcher. Nothing will continue.)\n: ")
 
-	_die("Quit!")
+		if get_command in ["exit", "quit", "q"]:
+			break
+
+		if get_command != "":
+			parse_command(get_command)
+
+		currently_paused = False
+		
+		print "* Unpaused...\n"
+		
+	sys.exit("Quit!")
 	
 
 if __name__ == "__main__":

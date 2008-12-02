@@ -13,5 +13,5 @@ config = {
 	# 'filename_prefix' : 'img-',
 
 	# Delay in seconds between each shot
-	# 'delay' : 60
+	'delay' : 10
 }
