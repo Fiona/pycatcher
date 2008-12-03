@@ -12,7 +12,9 @@ config = {
 	# Filenames are saved as prefix%n.png where %n is the number in the sequence.
 	'filename_prefix' : 'img-',
 	# Delay in seconds between each image shot
-	'delay' : 60
+	'delay' : 60,
+	# List of filters to apply to the images
+	'filters' : []
 }
 
 img_counter = 1
@@ -61,6 +63,16 @@ def take_image():
 		screengrab.get_rowstride(),
 		1
 	)
+
+	for filter_name in config['filters']:
+		fil = __import__("filters." + filter_name)
+		filter_config = fil.__dict__[filter_name].config
+
+		for k in filter_config:
+			if k not in config:
+				config[k] = filter_config[k]
+
+		print config
 
 	print "Saving image ..."
 
