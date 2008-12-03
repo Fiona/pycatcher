@@ -20,7 +20,9 @@ config = {
 img_counter = 1
 
 currently_paused = False
-	
+
+filter_instances = {}
+
 	
 def take_image():
 	""" The magic method - Captures an image and saves it out. """
@@ -65,14 +67,7 @@ def take_image():
 	)
 
 	for filter_name in config['filters']:
-		fil = __import__("filters." + filter_name)
-		filter_config = fil.__dict__[filter_name].config
-
-		for k in filter_config:
-			if k not in config:
-				config[k] = filter_config[k]
-
-		print config
+		final_screengrab = filter_instances[filter_name].apply_filter(final_screengrab, config)
 
 	print "Saving image ..."
 
@@ -98,6 +93,8 @@ def thread_through():
 	""" Used for threading the screenshot taking mechanism so we can get input
 	And still be lazy with time.sleep() """
 	global currently_paused
+
+	#time.sleep(config['delay'])
 	
 	while True:
 		if currently_paused == False:
@@ -133,6 +130,18 @@ def main():
 	if os.path.exists(config['filename_path']) == False:
 		sys.exit("Path defined in configuration does not exist.")
 
+	# load any overriding filter configs
+	for filter_name in config['filters']:
+		fil = __import__("filters." + filter_name)
+		filter_instances[filter_name] = fil.__dict__[filter_name].image_filter()
+		
+		filter_config = filter_instances[filter_name].config
+
+		for k in filter_config:
+			if k not in config:
+				config[k] = filter_config[k]
+			
+
 	print "---------------------------"
 	print "PyCatcher -----------------"
 	print "---------------------------"
@@ -153,7 +162,7 @@ def main():
 		get_input = raw_input("")
 		currently_paused = True
 		
-		get_command = raw_input("* Paused...\n* Plase enter commend. (exit to close PyCatcher. Nothing will continue.)\n: ")
+		get_command = raw_input("* Paused...\n* Please enter a command. (exit to close PyCatcher or nothing to continue.)\n: ")
 
 		if get_command in ["exit", "quit", "q"]:
 			break
