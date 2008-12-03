@@ -13,5 +13,8 @@ config = {
 	# 'filename_prefix' : 'img-',
 
 	# Delay in seconds between each shot
-	'delay' : 10
+	# 'delay' : 60
+
+	# List of filters to apply to the image
+	'filters' : ['text']
 }
