@@ -25,6 +25,13 @@ class image_filter(object):
         
     
     def apply_filter(self, image, _config):
+        # OpenCV sucks, it keeps all frames cached so when I query them
+        # they are old frames. I delete the camera object and get a new one
+        # so i can query the current frame only.
+        # this is the only solution i could work out to this problem.
+        del self.camera
+        self.camera = cv.CaptureFromCAM(-1)
+
         im = cv.QueryFrame(self.camera)
 
         # HEY HERE IS SOMETHING REALLY FUNNY
